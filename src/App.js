@@ -81,7 +81,8 @@ function App() {
       }
       setTimeout(() => {
         document.getElementById("beep").pause();
-      }, 1000);
+        document.getElementById("beep").currentTime = 0;
+      }, 2000);
     }
   }, [time]);
 
@@ -160,6 +161,7 @@ function App() {
               alt="reset"
               onClick={() => {
                 document.getElementById("beep").pause();
+                document.getElementById("beep").currentTime = 0;
                 setSession(25);
                 setBreaks(5);
                 setTime(1500);
@@ -219,9 +221,11 @@ function App() {
               onClick={() => {
                 if (!isCountDowning) {
                   if (breaks) {
-                    setBreaks((prevBreaks) => parseInt(prevBreaks) + 1);
-                  } else {
-                    toast.error("Break can't be smaller than one.");
+                    if (parseInt(breaks) < 60) {
+                      setBreaks((prevBreaks) => parseInt(prevBreaks) + 1);
+                    } else {
+                      toast.error("Break can't be greater than 60.");
+                    }
                   }
                 }
               }}
