@@ -183,7 +183,7 @@ function App() {
               onClick={() => {
                 if (!isCountDowning) {
                   if (parseInt(session) > 0) {
-                    if (parseInt(session) < 60) {
+                    if (parseInt(session) < 59) {
                       setSession((prevSession) => parseInt(prevSession) + 1);
                     } else {
                       toast.error("Session can't be greater than 60.");
@@ -221,7 +221,7 @@ function App() {
               onClick={() => {
                 if (!isCountDowning) {
                   if (breaks) {
-                    if (parseInt(breaks) < 60) {
+                    if (parseInt(breaks) < 59) {
                       setBreaks((prevBreaks) => parseInt(prevBreaks) + 1);
                     } else {
                       toast.error("Break can't be greater than 60.");
