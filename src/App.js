@@ -39,10 +39,6 @@ function App() {
   //   }
   // };
 
-  const playBeep = () => {
-    document.getElementById("beep").play();
-  };
-
   const timer = () => {
     let minutes = Math.floor(time / 60);
     let seconds = time - minutes * 60;
@@ -74,19 +70,18 @@ function App() {
     if (time === 0) {
       clearInterval(intervalRef.current);
       setIsCountDowning(false);
+      setIsBreak((pre) => !pre);
+      document.getElementById("beep").play();
+      if (!isBreak) {
+        setTime(breaks * 60);
+        countDown();
+      } else {
+        setTime(session * 60);
+        countDown();
+      }
       setTimeout(() => {
-        setIsBreak((pre) => !pre);
-        document.getElementById("beep").play();
-        if (!isBreak) {
-          setTime(breaks * 60);
-          countDown();
-        } else {
-          setTime(session * 60);
-          countDown();
-        }
+        document.getElementById("beep").pause();
       }, 1000);
-    } else {
-      document.getElementById("beep").pause();
     }
   }, [time]);
 
