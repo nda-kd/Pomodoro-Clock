@@ -8,6 +8,7 @@ import toast, { Toaster } from "react-hot-toast";
 
 function App() {
   const intervalRef = useRef(null);
+  const audioRef = useRef(null);
 
   const [breaks, setBreaks] = useState(5);
   const [session, setSession] = useState(25);
@@ -68,10 +69,16 @@ function App() {
 
   useEffect(() => {
     if (time === 0) {
+      audioRef.current.play();
+      setTimeout(() => {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }, 2000);
+    } else if (time < 0) {
       clearInterval(intervalRef.current);
       setIsCountDowning(false);
       setIsBreak((pre) => !pre);
-      document.getElementById("beep").play();
+
       if (!isBreak) {
         setTime(breaks * 60);
         countDown();
@@ -79,10 +86,6 @@ function App() {
         setTime(session * 60);
         countDown();
       }
-      setTimeout(() => {
-        document.getElementById("beep").pause();
-        document.getElementById("beep").currentTime = 0;
-      }, 2000);
     }
   }, [time]);
 
@@ -119,11 +122,13 @@ function App() {
               }`}
             >
               {timer()}
-              <audio
-                id="beep"
-                src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"
-              ></audio>
             </div>
+            <audio
+              id="beep"
+              preload="auto"
+              ref={(audio) => (audioRef.current = audio)}
+              src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"
+            />
           </div>
           <div>
             <div
@@ -138,21 +143,16 @@ function App() {
           </div>
         </div>
         <div className="timer-control">
-          <div id="start_stop">
+          <div
+            id="start_stop"
+            onClick={() => {
+              isPlay ? playStop("stop") : playStop("play");
+            }}
+          >
             {isPlay ? (
-              <img
-                src={pause}
-                id="stop"
-                alt="pause"
-                onClick={() => playStop("stop")}
-              />
+              <img src={pause} id="stop" alt="pause" />
             ) : (
-              <img
-                src={play}
-                id="start"
-                alt="play"
-                onClick={() => playStop("play")}
-              />
+              <img src={play} id="start" alt="play" />
             )}
           </div>
           <div id="reset">
@@ -160,8 +160,8 @@ function App() {
               src={reset}
               alt="reset"
               onClick={() => {
-                document.getElementById("beep").pause();
-                document.getElementById("beep").currentTime = 0;
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
                 setSession(25);
                 setBreaks(5);
                 setTime(1500);
@@ -175,15 +175,15 @@ function App() {
         </div>
       </section>
       <div className="buttons">
-        <div className="session" id="session-label">
-          SESSION
+        <div className="session">
+          <span id="session-label">Session Length</span>
           <div className="session-wrap">
             <div
               id="session-increment"
               onClick={() => {
                 if (!isCountDowning) {
                   if (parseInt(session) > 0) {
-                    if (parseInt(session) < 59) {
+                    if (parseInt(session) < 60) {
                       setSession((prevSession) => parseInt(prevSession) + 1);
                     } else {
                       toast.error("Session can't be greater than 60.");
@@ -196,7 +196,7 @@ function App() {
             >
               +
             </div>
-            <div id="session-length">{session}</div>
+            <div id="session-length">{parseInt(session)}</div>
             <div
               id="session-decrement"
               onClick={() => {
@@ -213,15 +213,15 @@ function App() {
             </div>
           </div>
         </div>
-        <div className="break" id="break-label">
-          BREAK
+        <div className="break">
+          <span id="break-label">Break Length</span>
           <div className="break-wrap">
             <div
               id="break-increment"
               onClick={() => {
                 if (!isCountDowning) {
                   if (breaks) {
-                    if (parseInt(breaks) < 59) {
+                    if (parseInt(breaks) < 60) {
                       setBreaks((prevBreaks) => parseInt(prevBreaks) + 1);
                     } else {
                       toast.error("Break can't be greater than 60.");
@@ -232,7 +232,7 @@ function App() {
             >
               +
             </div>
-            <div id="break-length">{breaks}</div>
+            <div id="break-length">{parseInt(breaks)}</div>
             <div
               id="break-decrement"
               onClick={() => {
