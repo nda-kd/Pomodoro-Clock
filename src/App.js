@@ -7,15 +7,15 @@ import reset from "./assets/reset.svg";
 import toast, { Toaster } from "react-hot-toast";
 
 function App() {
-  const intervalRef = useRef(null);
-  const audioRef = useRef(null);
+  const audioElement = useRef(null);
 
-  const [breaks, setBreaks] = useState(5);
-  const [session, setSession] = useState(25);
+  const [breaks, setBreaks] = useState(5 * 60);
+  const [session, setSession] = useState(25 * 60);
   const [isPlay, setIsPlay] = useState(false);
-  const [time, setTime] = useState(1500);
+  const [time, setTime] = useState(60);
   const [isBreak, setIsBreak] = useState(false);
   const [isCountDowning, setIsCountDowning] = useState(false);
+  const [intervalID, setIntervalID] = useState(null);
 
   // const onChangeHandle = (e) => {
   //   const { name, value } = e.target;
@@ -49,41 +49,80 @@ function App() {
   };
 
   const playStop = (state) => {
-    if (state === "play") {
+    if (intervalID === null) {
       setIsPlay(true);
       countDown();
-    } else if (state === "stop") {
+    } else {
       console.log("time", time);
       setIsPlay(false);
       setIsCountDowning(false);
-      clearInterval(intervalRef.current);
+      clearInterval(intervalID);
+      setIntervalID(null);
     }
   };
 
   const countDown = () => {
     setIsCountDowning(true);
-    intervalRef.current = setInterval(() => {
-      setTime((prev) => parseInt(prev) - 1);
+    var interval = setInterval(() => {
+      setTime((previousdisplayTime) => previousdisplayTime - 1);
     }, 1000);
+    setIntervalID(interval);
+  };
+
+  const resetHandler = () => {
+    audioElement.current.pause();
+    audioElement.current.currentTime = 0;
+    setSession(25 * 60);
+    setBreaks(5 * 60);
+    setTime(1500);
+    setIsBreak(false);
+    setIsPlay(false);
+    clearInterval(intervalID);
+    setIntervalID(null);
+    setIsCountDowning(false);
+  };
+
+  const incSessionTime = () => {
+    if (!isCountDowning) {
+      setSession(session >= 60 * 60 ? session : session + 60);
+    }
+  };
+
+  const decSessionTime = () => {
+    if (!isCountDowning) {
+      setSession(session <= 60 ? session : session - 60);
+    }
+  };
+
+  const incBreakTime = () => {
+    if (!isCountDowning) {
+      setBreaks(breaks >= 60 * 60 ? breaks : breaks + 60);
+    }
+  };
+
+  const decBreakTime = () => {
+    if (!isCountDowning) {
+      setBreaks(breaks <= 60 ? breaks : breaks - 60);
+    }
   };
 
   useEffect(() => {
     if (time === 0) {
-      audioRef.current.play();
+      audioElement.current.play();
       setTimeout(() => {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+        audioElement.current.pause();
+        audioElement.current.currentTime = 0;
       }, 2000);
-    } else if (time < 0) {
-      clearInterval(intervalRef.current);
+      clearInterval(intervalID);
+      setIntervalID(null);
       setIsCountDowning(false);
       setIsBreak((pre) => !pre);
 
       if (!isBreak) {
-        setTime(breaks * 60);
+        setTime(breaks);
         countDown();
       } else {
-        setTime(session * 60);
+        setTime(session);
         countDown();
       }
     }
@@ -91,13 +130,13 @@ function App() {
 
   useEffect(() => {
     if (!isCountDowning && !isBreak) {
-      setTime(parseInt(session) * 60);
+      setTime(parseInt(session));
     }
   }, [session]);
 
   useEffect(() => {
     if (!isCountDowning && isBreak) {
-      setTime(parseInt(breaks) * 60);
+      setTime(parseInt(breaks));
     }
   }, [breaks]);
 
@@ -123,22 +162,27 @@ function App() {
             >
               {timer()}
             </div>
-            <audio
-              id="beep"
-              preload="auto"
-              ref={(audio) => (audioRef.current = audio)}
-              src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"
-            />
           </div>
+          <audio
+            src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"
+            id="beep"
+            ref={audioElement}
+          ></audio>
           <div>
             <div
               className="session-label"
-              id={`${!isBreak ? "timer-label" : ""}`}
+              id={`${!isBreak ? "my-timer-label" : ""}`}
             >
               SESSION
             </div>
-            <div className="break-label" id={`${isBreak ? "timer-label" : ""}`}>
-              BREAK
+            <div style={{ position: "relative" }}>
+              <span
+                className="break-label"
+                id={`${isBreak ? "my-timer-label" : ""}`}
+              >
+                BREAK
+              </span>
+              <div id="timer-label">{isBreak ? "Break" : "Session"}</div>
             </div>
           </div>
         </div>
@@ -155,21 +199,12 @@ function App() {
               <img src={play} id="start" alt="play" />
             )}
           </div>
-          <div id="reset">
+          <div>
             <img
+              id="reset"
               src={reset}
               alt="reset"
-              onClick={() => {
-                audioRef.current.pause();
-                audioRef.current.currentTime = 0;
-                setSession(25);
-                setBreaks(5);
-                setTime(1500);
-                setIsBreak(false);
-                setIsPlay(false);
-                clearInterval(intervalRef.current);
-                setIsCountDowning(false);
-              }}
+              onClick={() => resetHandler()}
             />
           </div>
         </div>
@@ -181,32 +216,16 @@ function App() {
             <div
               id="session-increment"
               onClick={() => {
-                if (!isCountDowning) {
-                  if (parseInt(session) > 0) {
-                    if (parseInt(session) < 60) {
-                      setSession((prevSession) => parseInt(prevSession) + 1);
-                    } else {
-                      toast.error("Session can't be greater than 60.");
-                    }
-                  } else {
-                    toast.error("Session can't be smaller than one.");
-                  }
-                }
+                incSessionTime();
               }}
             >
               +
             </div>
-            <div id="session-length">{parseInt(session)}</div>
+            <div id="session-length">{parseInt(session) / 60}</div>
             <div
               id="session-decrement"
               onClick={() => {
-                if (!isCountDowning) {
-                  if (parseInt(session) && parseInt(session) > 1) {
-                    setSession((prevSession) => parseInt(prevSession) - 1);
-                  } else {
-                    toast.error("Session can't be smaller than one.");
-                  }
-                }
+                decSessionTime();
               }}
             >
               -
@@ -216,35 +235,11 @@ function App() {
         <div className="break">
           <span id="break-label">Break Length</span>
           <div className="break-wrap">
-            <div
-              id="break-increment"
-              onClick={() => {
-                if (!isCountDowning) {
-                  if (breaks) {
-                    if (parseInt(breaks) < 60) {
-                      setBreaks((prevBreaks) => parseInt(prevBreaks) + 1);
-                    } else {
-                      toast.error("Break can't be greater than 60.");
-                    }
-                  }
-                }
-              }}
-            >
+            <div id="break-increment" onClick={() => incBreakTime()}>
               +
             </div>
-            <div id="break-length">{parseInt(breaks)}</div>
-            <div
-              id="break-decrement"
-              onClick={() => {
-                if (!isCountDowning) {
-                  if (parseInt(breaks) && parseInt(breaks) > 1) {
-                    setBreaks((prevBreaks) => parseInt(prevBreaks) - 1);
-                  } else {
-                    toast.error("Break can't be smaller than one.");
-                  }
-                }
-              }}
-            >
+            <div id="break-length">{parseInt(breaks) / 60}</div>
+            <div id="break-decrement" onClick={() => decBreakTime()}>
               -
             </div>
           </div>

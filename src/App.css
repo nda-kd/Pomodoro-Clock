@@ -94,6 +94,8 @@ section img {
   color: rgb(20, 188, 240);
 }
 
+
+
 .timer-control {
   display: flex;
   justify-content: space-between;
@@ -162,8 +164,16 @@ section img {
   text-align: center;
 }
 
-#timer-label {
+#my-timer-label {
   width: 430px;
+}
+
+#timer-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* z-index: -1; */
+  color: rgb(20, 188, 240) ;
 }
 
 .breakColor {
